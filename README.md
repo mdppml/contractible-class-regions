@@ -408,7 +408,6 @@ Algorithmic failures should be interpreted separately from infrastructure failur
 
 ## 📝 Citation
 
-Citation information will be added after review.
 
 ---
 
