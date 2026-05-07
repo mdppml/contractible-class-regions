@@ -154,28 +154,36 @@ Model indices:
 
 ---
 
+---
+
 ## 📊 Outputs
 
-Each successful run writes a text result file containing:
+Each run writes one result file:
 
 ```text
-final success or failure status
+results/<model_name>/quad<quad_id>.txt
+```
+
+This file contains the final status of the run and the quantities needed to reproduce the paper’s aggregate analyses, including:
+
+```text
+success or failure status
 target predicted label
-root quad acceptance status
-number of levels processed
-number of leaf quads
-number of vertices
+root-quad acceptance status
+number of refinement levels processed
+number of final leaf quads
+number of verified vertices
 number of grid samples evaluated
 number of repair attempts
-DeepFool repair statistics
+DeepFool repair iteration statistics
 constructed surface area
 boundary-matched Coons reference area
 constructed-to-Coons area ratio
-runtime statistics
-area coverage table by depth
+runtime
+area coverage table by refinement level
 ```
 
-The main scientific outputs are:
+The main paper aggregates these per-quad outputs to report:
 
 - success rate across loops and models
 - root-level acceptance rate
@@ -227,6 +235,7 @@ For example:
 ```
 
 ---
+
 ## Practical Notes
 
 The code uses torchvision pretrained ImageNet weights. Model-specific preprocessing is loaded automatically from torchvision.
@@ -240,6 +249,7 @@ If jobs are interrupted by the scheduler, increase the requested wall time or re
 Algorithmic failures should be interpreted separately from infrastructure failures. These occur when the filling procedure cannot repair a newly introduced vertex. In such cases, the DeepFool repair parameters, such as `--deepfool-iter`, `--overshoot`, and `--ls-steps`, can be adjusted as described in the paper.
 
 ---
+
 
 ## 📝 Citation
 
