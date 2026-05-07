@@ -44,7 +44,7 @@ Given four images assigned the same predicted label by a classifier, this reposi
 - **Run one quad locally:** use `simply_connected.py` directly.
 - **Run many quads on a cluster:** use `simply_connected_slurm.sh`.
 - **Reproduce the main experiment:** generate quads for each supported model, then run the filling SLURM array for each model.
-- **Run ablations:** change the grey-RMS stopping threshold with `--stop-diameter-gray-rms`.
+- **Run ablations:** change the gray-RMS stopping threshold with `--stop-diameter-gray-rms`.
 
 The prose in this README uses UK English, but the command-line flag remains `--stop-diameter-gray-rms` to match the implementation.
 
