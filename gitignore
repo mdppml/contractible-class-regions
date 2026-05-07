@@ -1,0 +1,14 @@
+imagenet_quads/
+results/
+checkpoints/
+rlogs/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pt
+*.pth
+*.tmp
+*.log
+.DS_Store
+.ipynb_checkpoints/

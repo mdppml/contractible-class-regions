@@ -1,0 +1,14 @@
+name: simply-connected
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pip
+  - pytorch
+  - torchvision
+  - pillow
+  - pip:
+      - datasets
+      - huggingface_hub
