@@ -1,4 +1,4 @@
-This repository is associated with the paper “Empirical Evidence for Simply Connected Decision Regions in Image Classifiers.”
+# Empirical Evidence for Simply Connected Decision Regions in Image Classifiers 
 
 Given four images assigned the same predicted label by a classifier, the method constructs a quad-mesh surface spanning the loop formed by the four images. The surface is recursively refined, checked by grid sampling, and repaired using local decision-boundary information when necessary.
 
