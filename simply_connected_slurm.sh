@@ -8,8 +8,8 @@
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=60G
 #SBATCH --array=1-1000%100
-#SBATCH --output=logs/%x_%A_%a.out
-#SBATCH --error=logs/%x_%A_%a.err
+#SBATCH --output=rlogs/%x_%A_%a.out
+#SBATCH --error=rlogs/%x_%A_%a.err
 
 set -euo pipefail
 
