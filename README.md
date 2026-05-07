@@ -8,7 +8,13 @@ Given four images assigned the same predicted label by a classifier, the method 
   Main implementation of the label-preserving quad filling procedure.
 
 - [**simply_connected_slurm.sh**](simply_connected_slurm.sh)  
-  SLURM template for running the method on an HPC cluster.
+  SLURM template for running the surface-filling method on an HPC cluster.
+
+- [**make_imagenet_quads.py**](make_imagenet_quads.py)  
+  Script for generating model-specific ImageNet quad sets.
+
+- [**make_imagenet_quads_slurm.sh**](make_imagenet_quads_slurm.sh)  
+  SLURM template for generating quad sets on an HPC cluster.
 
 - [**imagenet_quads/**](imagenet_quads/)  
   Input directory containing model-specific four-image loops.
@@ -26,19 +32,20 @@ Given four images assigned the same predicted label by a classifier, the method 
 
 ## 🧭 Pick a Workflow
 
+- **Generate ImageNet quads:** use `make_imagenet_quads.py` or `make_imagenet_quads_slurm.sh`.
 - **Run one quad locally:** use `simply_connected.py` directly.
 - **Run many quads on a cluster:** use `simply_connected_slurm.sh`.
-- **Reproduce the main experiment:** run the SLURM array for each supported model.
-- **Run ablations:** change the gray-RMS stopping threshold with `--stop-diameter-gray-rms`.
+- **Reproduce the main experiment:** generate quads for each supported model, then run the filling SLURM array for each model.
+- **Run ablations:** change the grey-RMS stopping threshold with `--stop-diameter-grey-rms`.
 
 ---
 
 ## ⚙️ Requirements
 
-The code requires Python with PyTorch, torchvision, and Pillow.
+The code requires Python with PyTorch, torchvision, Pillow, Hugging Face datasets, and Hugging Face Hub.
 
 ```bash
-pip install torch torchvision pillow
+pip install torch torchvision pillow datasets huggingface_hub
 ```
 
 The experiments in the paper were run on GPU-enabled nodes. CUDA is strongly recommended.
@@ -47,7 +54,7 @@ The experiments in the paper were run on GPU-enabled nodes. CUDA is strongly rec
 
 ## 🖼️ Input Format
 
-The code expects four images per loop, named using the quad id and a letter:
+The surface-filling code expects four images per loop, named using the quad id and a letter:
 
 ```text
 0001a.jpeg
@@ -80,6 +87,103 @@ Each set of four images should be assigned the same predicted label by the corre
 
 ---
 
+## 🧩 Generating ImageNet Quads
+
+The quad-generation script streams ImageNet validation images, classifies them with a chosen torchvision model, and stores four disk-stable images per predicted label. Disk-stable means that the image is saved as JPEG, reloaded from disk, and still assigned the same predicted label by the same model.
+
+To generate quads for one model locally:
+
+```bash
+python make_imagenet_quads.py \
+  --model resnet50 \
+  --output-dir imagenet_quads \
+  --dataset-name ILSVRC/imagenet-1k \
+  --split validation \
+  --num-labels 1000 \
+  --images-per-label 4 \
+  --filename-width 4 \
+  --jpeg-quality 100 \
+  --jpeg-subsampling 0 \
+  --batch-size 64 \
+  --verify-batch-size 64 \
+  --use-channels-last \
+  --use-tf32
+```
+
+This writes the quad images to:
+
+```text
+imagenet_quads/resnet50/
+```
+
+The script also writes metadata files:
+
+```text
+metadata.csv
+label_summary.csv
+quads.json
+run.json
+```
+
+The ImageNet dataset on Hugging Face may require authentication. You can provide a token either through the environment:
+
+```bash
+export HF_TOKEN=your_huggingface_token
+```
+
+or directly with:
+
+```bash
+--token your_huggingface_token
+```
+
+If your dataset uses a different image column name, pass it with:
+
+```bash
+--image-column image
+```
+
+For the main experiment, generate quad folders separately for each supported model, because different models may assign different predicted labels to the same ImageNet image.
+
+---
+
+## 🖥️ Generating Quads on SLURM
+
+Before using the quad-generation SLURM script, replace the template values inside `make_imagenet_quads_slurm.sh`.
+
+Required replacements:
+
+```text
+PARTITION_NAME
+PATH_TO_REPOSITORY
+PATH_TO_CONDA_ENV
+```
+
+Then submit:
+
+```bash
+sbatch make_imagenet_quads_slurm.sh
+```
+
+The default SLURM array generates quads for:
+
+```text
+resnet50
+densenet121
+efficientnet_b0
+convnext_tiny
+vit_b_16
+swin_t
+```
+
+The generated folders are written to:
+
+```text
+imagenet_quads/<model_name>/
+```
+
+---
+
 ## 🚀 Running a Single Quad
 
 ```bash
@@ -91,7 +195,7 @@ python simply_connected.py \
   --checkpoint-dir checkpoints/resnet50 \
   --expected-quads 1000 \
   --filename-width 4 \
-  --stop-diameter-gray-rms 0.5 \
+  --stop-diameter-grey-rms 0.5 \
   --max-grid-steps 512
 ```
 
@@ -118,7 +222,7 @@ swin_t
 
 ---
 
-## 🖥️ Running on SLURM
+## 🖥️ Running Surface Filling on SLURM
 
 Before using the SLURM script, replace the template values inside `simply_connected_slurm.sh`.
 
@@ -151,8 +255,6 @@ Model indices:
 5 = vit_b_16
 6 = swin_t
 ```
-
----
 
 ---
 
@@ -192,14 +294,14 @@ The main paper aggregates these per-quad outputs to report:
 - constructed-to-Coons area ratio
 - DeepFool repair statistics
 - runtime and computational cost
-- gray-RMS threshold ablations
+- grey-RMS threshold ablations
 
 ---
 
 ## 📏 Main Parameters
 
-- `--stop-diameter-gray-rms`  
-  Gray-level RMS diameter threshold below which a quad is accepted by resolution.
+- `--stop-diameter-grey-rms`  
+  Grey-level RMS diameter threshold below which a quad is accepted by resolution.
 
 - `--max-grid-steps`  
   Maximum grid resolution used when checking a quad.
@@ -220,18 +322,18 @@ The main paper aggregates these per-quad outputs to report:
 
 ## 🔁 RMS Threshold Ablation
 
-To run the same quad set with a stricter or looser gray-RMS threshold, change:
+To run the same quad set with a stricter or looser grey-RMS threshold, change:
 
 ```bash
---stop-diameter-gray-rms 0.5
+--stop-diameter-grey-rms 0.5
 ```
 
 For example:
 
 ```bash
---stop-diameter-gray-rms 1.0
---stop-diameter-gray-rms 0.25
---stop-diameter-gray-rms 0.125
+--stop-diameter-grey-rms 1.0
+--stop-diameter-grey-rms 0.25
+--stop-diameter-grey-rms 0.125
 ```
 
 ---
@@ -249,7 +351,6 @@ If jobs are interrupted by the scheduler, increase the requested wall time or re
 Algorithmic failures should be interpreted separately from infrastructure failures. These occur when the filling procedure cannot repair a newly introduced vertex. In such cases, the DeepFool repair parameters, such as `--deepfool-iter`, `--overshoot`, and `--ls-steps`, can be adjusted as described in the paper.
 
 ---
-
 
 ## 📝 Citation
 
