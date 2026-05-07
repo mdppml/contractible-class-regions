@@ -1,6 +1,8 @@
-# Empirical Evidence for Simply Connected Decision Regions in Image Classifiers 
+# Empirical Evidence for Simply Connected Decision Regions in Image Classifiers
 
-Given four images assigned the same predicted label by a classifier, the method constructs a quad-mesh surface spanning the loop formed by the four images. The surface is recursively refined, checked by grid sampling, and repaired using local decision-boundary information when necessary.
+Given four images assigned the same predicted label by a classifier, this repository constructs a quad-mesh surface spanning the loop formed by the four images. The surface is recursively refined, checked by grid sampling, and repaired using local decision-boundary information when necessary.
+
+---
 
 ## 📂 Repository Structure
 
@@ -16,17 +18,23 @@ Given four images assigned the same predicted label by a classifier, the method 
 - [**make_imagenet_quads_slurm.sh**](make_imagenet_quads_slurm.sh)  
   SLURM template for generating quad sets on an HPC cluster.
 
+- [**requirements.txt**](requirements.txt)  
+  Minimal Python package requirements.
+
+- [**environment.yml**](environment.yml)  
+  Optional conda environment specification.
+
 - [**imagenet_quads/**](imagenet_quads/)  
-  Input directory containing model-specific four-image loops.
+  Input directory containing model-specific four-image loops. This directory is generated locally and should not be committed.
 
 - [**results/**](results/)  
-  Output directory for final `.txt` result files.
+  Output directory for final `.txt` result files. This directory is generated locally and should not be committed.
 
 - [**checkpoints/**](checkpoints/)  
-  Optional checkpoint directory for intermediate mesh states.
+  Optional checkpoint directory for intermediate mesh states. This directory is generated locally and should not be committed.
 
 - [**rlogs/**](rlogs/)  
-  SLURM output and error logs.
+  SLURM output and error logs. This directory is generated locally and should not be committed.
 
 ---
 
@@ -36,7 +44,9 @@ Given four images assigned the same predicted label by a classifier, the method 
 - **Run one quad locally:** use `simply_connected.py` directly.
 - **Run many quads on a cluster:** use `simply_connected_slurm.sh`.
 - **Reproduce the main experiment:** generate quads for each supported model, then run the filling SLURM array for each model.
-- **Run ablations:** change the grey-RMS stopping threshold with `--stop-diameter-grey-rms`.
+- **Run ablations:** change the grey-RMS stopping threshold with `--stop-diameter-gray-rms`.
+
+The prose in this README uses UK English, but the command-line flag remains `--stop-diameter-gray-rms` to match the implementation.
 
 ---
 
@@ -44,11 +54,20 @@ Given four images assigned the same predicted label by a classifier, the method 
 
 The code requires Python with PyTorch, torchvision, Pillow, Hugging Face datasets, and Hugging Face Hub.
 
+Using pip:
+
 ```bash
-pip install torch torchvision pillow datasets huggingface_hub
+pip install -r requirements.txt
 ```
 
-The experiments in the paper were run on GPU-enabled nodes. CUDA is strongly recommended.
+Using conda:
+
+```bash
+conda env create -f environment.yml
+conda activate simply-connected
+```
+
+CUDA is strongly recommended. The experiments in the paper were run on GPU-enabled nodes.
 
 ---
 
@@ -84,6 +103,8 @@ imagenet_quads/
 ```
 
 Each set of four images should be assigned the same predicted label by the corresponding model.
+
+ImageNet images should not be committed to the repository. Generate them locally using the quad-generation script.
 
 ---
 
@@ -125,7 +146,7 @@ quads.json
 run.json
 ```
 
-The ImageNet dataset on Hugging Face may require authentication. You can provide a token either through the environment:
+The ImageNet dataset on Hugging Face may require authentication. You can provide a token through the environment:
 
 ```bash
 export HF_TOKEN=your_huggingface_token
@@ -195,7 +216,7 @@ python simply_connected.py \
   --checkpoint-dir checkpoints/resnet50 \
   --expected-quads 1000 \
   --filename-width 4 \
-  --stop-diameter-grey-rms 0.5 \
+  --stop-diameter-gray-rms 0.5 \
   --max-grid-steps 512
 ```
 
@@ -204,6 +225,50 @@ The final result is written to:
 ```text
 results/resnet50/quad1.txt
 ```
+
+---
+
+## ✅ Quick Test
+
+A small test run can be used to check that the repository, dependencies, ImageNet access, and model loading work correctly.
+
+First generate a tiny quad set:
+
+```bash
+python make_imagenet_quads.py \
+  --model resnet50 \
+  --output-dir imagenet_quads \
+  --dataset-name ILSVRC/imagenet-1k \
+  --split validation \
+  --num-labels 2 \
+  --images-per-label 4 \
+  --filename-width 4 \
+  --jpeg-quality 100 \
+  --jpeg-subsampling 0 \
+  --batch-size 16 \
+  --verify-batch-size 16 \
+  --max-records 2000
+```
+
+Then run the filling procedure on the first generated quad:
+
+```bash
+python simply_connected.py \
+  --model-name resnet50 \
+  --quad-id 1 \
+  --quad-image-dir imagenet_quads/resnet50 \
+  --results-dir results/resnet50_quicktest \
+  --checkpoint-dir checkpoints/resnet50_quicktest \
+  --expected-quads 2 \
+  --filename-width 4 \
+  --stop-diameter-gray-rms 0.5 \
+  --max-grid-steps 128 \
+  --sample-batch-size 32 \
+  --label-batch-size 32 \
+  --repair-batch-size 4
+```
+
+This quick test is not intended to reproduce the paper results. It only checks that the pipeline runs end to end.
 
 ---
 
@@ -285,22 +350,11 @@ runtime
 area coverage table by refinement level
 ```
 
-The main paper aggregates these per-quad outputs to report:
-
-- success rate across loops and models
-- root-level acceptance rate
-- parameter-domain coverage by refinement level
-- final mesh complexity
-- constructed-to-Coons area ratio
-- DeepFool repair statistics
-- runtime and computational cost
-- grey-RMS threshold ablations
-
 ---
 
 ## 📏 Main Parameters
 
-- `--stop-diameter-grey-rms`  
+- `--stop-diameter-gray-rms`  
   Grey-level RMS diameter threshold below which a quad is accepted by resolution.
 
 - `--max-grid-steps`  
@@ -325,15 +379,15 @@ The main paper aggregates these per-quad outputs to report:
 To run the same quad set with a stricter or looser grey-RMS threshold, change:
 
 ```bash
---stop-diameter-grey-rms 0.5
+--stop-diameter-gray-rms 0.5
 ```
 
 For example:
 
 ```bash
---stop-diameter-grey-rms 1.0
---stop-diameter-grey-rms 0.25
---stop-diameter-grey-rms 0.125
+--stop-diameter-gray-rms 1.0
+--stop-diameter-gray-rms 0.25
+--stop-diameter-gray-rms 0.125
 ```
 
 ---
@@ -354,8 +408,7 @@ Algorithmic failures should be interpreted separately from infrastructure failur
 
 ## 📝 Citation
 
-```
-```
+Citation information will be added after review.
 
 ---
 
