@@ -1,4 +1,4 @@
-#contractible-class-regions 
+# contractible-class-regions 
 
 Code for the paper [**Empirical Evidence for Simply Connected Decision Regions in Image Classifiers**](https://arxiv.org/abs/2605.06380).
 
