@@ -1,4 +1,6 @@
-# Empirical Evidence for Simply Connected Decision Regions in Image Classifiers
+#contractible-class-regions 
+
+Code for the paper [**Empirical Evidence for Simply Connected Decision Regions in Image Classifiers**](https://arxiv.org/abs/2605.06380).
 
 Given four images assigned the same predicted label by a classifier, this repository constructs a quad-mesh surface spanning the loop formed by the four images. The surface is recursively refined, checked by grid sampling, and repaired using local decision-boundary information when necessary.
 
@@ -408,7 +410,16 @@ Algorithmic failures should be interpreted separately from infrastructure failur
 
 ## 📝 Citation
 
-
+```bibtex
+@misc{swaminathan2026empiricalevidencesimplyconnected,
+  title={Empirical Evidence for Simply Connected Decision Regions in Image Classifiers},
+  author={Swaminathan, Arjhun and Akgün, Mete},
+  year={2026},
+  eprint={2605.06380},
+  archivePrefix={arXiv},
+  primaryClass={cs.CV},
+  url={https://arxiv.org/abs/2605.06380}
+}
 ---
 
 ## 📜 License
