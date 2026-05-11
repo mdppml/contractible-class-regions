@@ -420,6 +420,7 @@ Algorithmic failures should be interpreted separately from infrastructure failur
   primaryClass={cs.CV},
   url={https://arxiv.org/abs/2605.06380}
 }
+```
 ---
 
 ## 📜 License
